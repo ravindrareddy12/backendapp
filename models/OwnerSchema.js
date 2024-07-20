@@ -4,7 +4,8 @@ const mongoose = require('mongoose');
         phoneNumber: { type: String, required: true },
         email: { type: String, required: true, unique: true },
         password: { type: String, required: true },
-        profilePicture: { type: String } // URL to profile picture
+        profilePicture: { type: String } ,
+        apartment: { type: mongoose.Schema.Types.ObjectId, ref: 'Apartment' }
     });
     
     module.exports = mongoose.model('Owner', OwnerSchema);
