@@ -12,7 +12,7 @@ app.use(bodyParser.json());
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
+app.use('/uploads', express.static('uploads')); 
 
 app.use('/api', apartmentRoutes);
 app.get('/',(req,res)=>{
