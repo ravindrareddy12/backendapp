@@ -3,16 +3,15 @@ const multer = require('multer');
 const router = express.Router();
 const Apartment = require('../models/ApartmentSchema');
 const Owner = require('../models/OwnerSchema');
-
+const upload = require('../config/upload');
 // Set up multer for image upload
-const storage = multer.memoryStorage();
-const upload = multer({ storage: storage });
 
-router.post('/register-apartment', upload.fields([{ name: 'profilePicture' }, { name: 'apartmentPicture' }]), async (req, res) => {
+
+router.post('/register-apartment', upload.fields([{ name: 'profilePicture',maxCount:1 }, { name: 'apartmentPicture',maxCount:1 }]), async (req, res) => {
   try {
     const { apartmentName, ownerName, phoneNumber, email, password } = req.body;
-    const profilePicture = req.files.profilePicture ? req.files.profilePicture[0].buffer : null;
-    const apartmentPicture = req.files.apartmentPicture ? req.files.apartmentPicture[0].buffer : null;
+    const profilePicture = req.files['profilePicture'] ? req.files['profilePicture'][0].filename : null;
+    const apartmentPicture = req.files['apartmentPicture'] ? req.files['apartmentPicture'][0].filename : null;
 
     const owner = new Owner({ name: ownerName, phoneNumber, email, password, profilePicture });
     await owner.save();
