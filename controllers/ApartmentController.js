@@ -32,4 +32,13 @@ router.post('/register-apartment', upload.fields([{ name: 'profilePicture',maxCo
   }
 });
 
+router.get('/apartments', async (req, res) => {
+  try {
+    const apartments = await Apartment.find().populate('owner', 'name email phoneNumber profilePicture');
+    res.status(200).json(apartments);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;
