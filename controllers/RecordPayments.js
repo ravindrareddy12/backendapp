@@ -1,58 +1,44 @@
 const express = require('express');
-const router = express.Router();
-const Transaction = require('../models/TransactionSchema');
 const Resident = require('../models/ResidentSchema');
 const Worker = require('../models/WorkerSchema');
+const Owner = require('../models/OwnerSchema');
+const { sendPaymentConfirmation } = require('../services/paymentService');
 
-// Record a payment from resident to owner
-router.post('/record-resident-payment', async (req, res) => {
+const router = express.Router();
+
+router.post('/pay-resident', async (req, res) => {
+  const { email, paymentAmount } = req.body;
   try {
-    const { residentId, ownerId, amount } = req.body;
-
-    // Create and save the transaction
-    const transaction = new Transaction({
-      from: residentId,
-      to: ownerId,
-      fromModel: 'Resident',
-      toModel: 'Owner',
-      amount,
-      status: 'Completed'
-    });
-
-    await transaction.save();
-
-    // Update the resident's payment status
-    await Resident.findByIdAndUpdate(residentId, { paymentStatus: 'Paid' });
-
-    res.status(201).json({ message: 'Payment recorded successfully', transaction });
+    const resident = await Resident.findOne({ email });
+    if (resident) {
+      resident.paymentStatus = 'Paid';
+      resident.monthlyPayment = paymentAmount;
+      await resident.save();
+      await sendPaymentConfirmation(resident.email, resident.name, 'resident');
+      res.status(200).send('Resident payment updated and email sent.');
+    } else {
+      res.status(404).send('Resident not found.');
+    }
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).send('Server error.');
   }
 });
 
-// Record a payment from owner to worker
-router.post('/record-worker-payment', async (req, res) => {
+router.post('/pay-worker', async (req, res) => {
+  const { email, paymentAmount } = req.body;
   try {
-    const { ownerId, workerId, amount } = req.body;
-
-    // Create and save the transaction
-    const transaction = new Transaction({
-      from: ownerId,
-      to: workerId,
-      fromModel: 'Owner',
-      toModel: 'Worker',
-      amount,
-      status: 'Completed'
-    });
-
-    await transaction.save();
-
-    // Update the worker's payment status
-    await Worker.findByIdAndUpdate(workerId, { paymentStatus: 'Paid' });
-
-    res.status(201).json({ message: 'Payment recorded successfully', transaction });
+    const worker = await Worker.findOne({ email });
+    if (worker) {
+      worker.paymentStatus = 'Paid';
+      worker.monthlyPayment = paymentAmount;
+      await worker.save();
+      await sendPaymentConfirmation(worker.email, worker.name, 'worker');
+      res.status(200).send('Worker payment updated and email sent.');
+    } else {
+      res.status(404).send('Worker not found.');
+    }
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).send('Server error.');
   }
 });
 

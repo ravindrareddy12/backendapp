@@ -5,32 +5,30 @@ const jwt = require('jsonwebtoken');
 const Apartment = require('../models/ApartmentSchema');
 const Resident = require('../models/ResidentSchema');
 const Worker = require('../models/WorkerSchema');
-const router = express.Router();
 const jwtSecret = 'your_jwt_secret'; 
+const profilePicture= require('../config/upload');
 // Multer configuration for PDF upload
+const router = express.Router();
+
+
+// Configure multer for file uploads
 const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'documents/');
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + '-' + file.originalname);
-  }
-});
-
-const upload = multer({ 
-  storage: storage,
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype === 'application/pdf') {
-      cb(null, true);
-    } else {
-      cb(new Error('Only PDF files are allowed'), false);
+  destination: (req, file, cb) => {
+    if (file.fieldname === 'aadhaarCard') {
+      cb(null, 'uploads/aadhaarCards/');
+    } else if (file.fieldname === 'profilePic') {
+      cb(null, 'uploads/profilePictures/');
     }
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + '-' + file.originalname);
   }
 });
 
-router.post('/add-resident', upload.single('aadhaarCard'), async (req, res) => {
-  const { apartmentId, name, email, password, monthlyPayment } = req.body;
+const upload = multer({ storage: storage });
+
+router.post('/add-resident', upload.fields([{ name: 'aadhaarCard', maxCount: 1 }, { name: 'profilePic', maxCount: 1 }]), async (req, res) => {
+  const { apartmentId, name, email, password, monthlyPayment, paymentDueDate } = req.body;
 
   try {
     const apartment = await Apartment.findById(apartmentId).populate('residents').populate('workers');
@@ -46,9 +44,19 @@ router.post('/add-resident', upload.single('aadhaarCard'), async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const aadhaarCard = req.file.filename;
+    const aadhaarCard = req.files['aadhaarCard'] ? req.files['aadhaarCard'][0].filename : null;
+    const profilePicture = req.files['profilePic'] ? req.files['profilePic'][0].filename : null;
 
-    const newResident = new Resident({ name, email, password: hashedPassword, aadhaarCard, monthlyPayment });
+    const newResident = new Resident({ 
+      name, 
+      email, 
+      password: hashedPassword, 
+      aadhaarCard, 
+      monthlyPayment, 
+      paymentDueDate, 
+      profilePic: profilePicture 
+    });
+
     await newResident.save();
 
     apartment.residents.push(newResident._id);
@@ -60,8 +68,10 @@ router.post('/add-resident', upload.single('aadhaarCard'), async (req, res) => {
   }
 });
 
-router.post('/add-worker', upload.single('aadhaarCard'), async (req, res) => {
-  const { apartmentId, name, email, password, monthlyPayment } = req.body;
+
+
+router.post('/add-worker', upload.fields([{ name: 'aadhaarCard', maxCount: 1 }, { name: 'profilePic', maxCount: 1 }]), async (req, res) => {
+  const { apartmentId, name, email, password, monthlyPayment, paymentDueDate } = req.body;
 
   try {
     const apartment = await Apartment.findById(apartmentId).populate('residents').populate('workers');
@@ -77,15 +87,25 @@ router.post('/add-worker', upload.single('aadhaarCard'), async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const aadhaarCard = req.file.filename;
+    const aadhaarCard = req.files['aadhaarCard'] ? req.files['aadhaarCard'][0].filename : null;
+    const profilePicture = req.files['profilePic'] ? req.files['profilePic'][0].filename : null;
 
-    const newWorker = new Worker({ name, email, password: hashedPassword, aadhaarCard, monthlyPayment });
+    const newWorker = new Worker({ 
+      name, 
+      email, 
+      password: hashedPassword, 
+      aadhaarCard, 
+      monthlyPayment, 
+      paymentDueDate, 
+      profilePic: profilePicture 
+    });
+
     await newWorker.save();
 
     apartment.workers.push(newWorker._id);
     await apartment.save();
 
-    res.status(201).json({ message: 'Worker added successfully' });
+    res.status(201).json({ message: 'worker added successfully' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -162,6 +182,24 @@ router.get('/workers/:apartmentId', async (req, res) => {
     res.status(200).json({ workers });
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+});
+
+router.get('/apartment-details/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const apartment = await Apartment.findById(id)
+      .populate('residents')
+      .populate('workers');
+
+    if (!apartment) {
+      return res.status(404).json({ message: 'Apartment not found' });
+    }
+
+    res.status(200).json(apartment);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 

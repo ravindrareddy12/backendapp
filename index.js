@@ -10,6 +10,8 @@ const db= require('./config/db')
 const app = express()
 const port = 5500
 const passport = require('./config/passport')
+const path =  require('path')
+const scheduler = require('./services/scheduler');
 
 app.use(cors());
 
@@ -21,7 +23,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use(session({
-    secret: 'your_session_secret', // Replace with your secret
+    secret: 'your_session_secret', 
     resave: false,
     saveUninitialized: true,
   }));
@@ -31,9 +33,13 @@ app.use(passport.initialize());
 app.use('/uploads', express.static('uploads')); 
 app.use('/documents', express.static('documents')); 
 
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 app.use('/api', apartmentRoutes);
 app.use('/owner',routes)
 app.use('/api/worres', resWorkRoutes);
+
+scheduler;
 
 app.get('/',(req,res)=>{
     res.send("Hello")

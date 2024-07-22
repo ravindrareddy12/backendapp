@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+
 const WorkerSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
@@ -6,8 +7,7 @@ const WorkerSchema = new mongoose.Schema({
   aadhaarCard: { type: String, required: true },
   monthlyPayment: { type: Number, required: true },
   paymentStatus: { type: String, enum: ['Paid', 'Unpaid'], default: 'Unpaid' },
-  paymentDueDate: { type: Date, required: true } // Add due date for payments
+  paymentDueDate: { type: Date, required: true }
 });
-  
-  module.exports = mongoose.model('Worker', WorkerSchema);
-  
+
+module.exports = mongoose.model('Worker', WorkerSchema);
