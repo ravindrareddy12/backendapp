@@ -28,7 +28,10 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 router.post('/add-resident', upload.fields([{ name: 'aadhaarCard', maxCount: 1 }, { name: 'profilePic', maxCount: 1 }]), async (req, res) => {
-  const { apartmentId, name, email, password, monthlyPayment, paymentDueDate } = req.body;
+  console.log(req.body)
+
+  console.log("function called 2")
+  const { apartmentId, name, email, password, monthlyPayment, paymentDueDate,paymentStatus } = req.body;
 
   try {
     const apartment = await Apartment.findById(apartmentId).populate('residents').populate('workers');
@@ -39,14 +42,17 @@ router.post('/add-resident', upload.fields([{ name: 'aadhaarCard', maxCount: 1 }
     const residentEmailExists = apartment.residents.some(resident => resident.email === email);
     const workerEmailExists = apartment.workers.some(worker => worker.email === email);
 
+     
     if (residentEmailExists || workerEmailExists) {
       return res.status(400).json({ message: 'Email is already used in this apartment' });
     }
-
+    console.log("inside")
     const hashedPassword = await bcrypt.hash(password, 10);
+    console.log(hashedPassword)
     const aadhaarCard = req.files['aadhaarCard'] ? req.files['aadhaarCard'][0].filename : null;
+    console.log(aadhaarCard)
     const profilePicture = req.files['profilePic'] ? req.files['profilePic'][0].filename : null;
-
+    console.log(profilePicture)
     const newResident = new Resident({ 
       name, 
       email, 
@@ -54,16 +60,18 @@ router.post('/add-resident', upload.fields([{ name: 'aadhaarCard', maxCount: 1 }
       aadhaarCard, 
       monthlyPayment, 
       paymentDueDate, 
-      profilePic: profilePicture 
+      profilePic: profilePicture,
+      paymentStatus
     });
 
     await newResident.save();
 
     apartment.residents.push(newResident._id);
     await apartment.save();
-
+    console.log("Resident added successfully")
     res.status(201).json({ message: 'Resident added successfully' });
   } catch (err) {
+    console.log(err)
     res.status(500).json({ error: err.message });
   }
 });
