@@ -8,7 +8,7 @@ const ResidentSchema = new mongoose.Schema({
   aadhaarCard: { type: String, required: true },
   monthlyPayment: { type: Number, required: true },
   paymentStatus: { type: String, enum: ['Paid', 'Unpaid'], default: 'Unpaid' },
-  paymentDueDate: { type: Date, required: truex }
+  paymentDueDate: { type: Date, required: true }
 });
 
 module.exports = mongoose.model('Resident', ResidentSchema);
