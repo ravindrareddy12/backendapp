@@ -10,6 +10,7 @@ const profilePicture= require('../config/upload');
 // Multer configuration for PDF upload
 const router = express.Router();
 
+const passport = require('../config/passport');
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -193,7 +194,7 @@ router.get('/workers/:apartmentId', async (req, res) => {
   }
 });
 
-router.get('/apartment-details/:id', async (req, res) => {
+router.get('/apartment-details/:id',passport.authenticate('jwt', { session: false }),async (req, res) => {
   const { id } = req.params;
 
   try {

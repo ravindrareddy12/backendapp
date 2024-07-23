@@ -12,6 +12,9 @@ const port = 5500
 const passport = require('./config/passport')
 const path =  require('path')
 const scheduler = require('./services/scheduler');
+require('dotenv').config();
+
+// console.log('Port:', process.env.PORT);
 
 app.use(cors());
 

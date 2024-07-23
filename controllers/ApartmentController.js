@@ -16,6 +16,7 @@ const upload = require('../config/upload');
 // ];
 router.post('/register-apartment', upload.fields([{ name: 'profilePicture',maxCount:1 }, { name: 'apartmentPicture',maxCount:1 }]), async (req, res) => {
   try {
+    console.log("called")
     const { apartmentName, ownerName, phoneNumber, email, password } = req.body;
     const profilePicture = req.files['profilePicture'] ? req.files['profilePicture'][0].filename : null;
     const apartmentPicture = req.files['apartmentPicture'] ? req.files['apartmentPicture'][0].filename : null;
